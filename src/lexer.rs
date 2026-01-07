@@ -10,16 +10,15 @@ fn skip_to_newline(itr: &mut Peekable<impl Iterator<Item = char>>) {
     }
 }
 
-enum StringParseErr {
-    NoMoreChars,
-    NoStartQuotation,
-    NoEndQuotation,
-}
+struct StringParseErr {}
 
+// NoMoreChars,
+// NoStartQuotation,
+// NoEndQuotation,
 fn parse_string(itr: &mut impl Iterator<Item = char>) -> Result<String, StringParseErr> {
-    let first = itr.next().ok_or(StringParseErr::NoMoreChars)?;
+    let first = itr.next().ok_or(StringParseErr {})?;
     if first != '"' {
-        return Err(StringParseErr::NoStartQuotation);
+        return Err(StringParseErr {});
     }
 
     let mut result = String::new();
@@ -30,7 +29,7 @@ fn parse_string(itr: &mut impl Iterator<Item = char>) -> Result<String, StringPa
         result.push(c);
     }
 
-    Err(StringParseErr::NoEndQuotation)
+    Err(StringParseErr {})
 }
 
 struct IntParseErr {}
@@ -153,4 +152,34 @@ pub fn lex(input: &str) -> Result<Vec<Token>, Error> {
     }
 
     Ok(tokens)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_skip_to_newline() {
+        todo!();
+    }
+
+    #[test]
+    fn test_parse_string() {
+        todo!();
+    }
+
+    #[test]
+    fn test_parse_int() {
+        todo!();
+    }
+
+    #[test]
+    fn test_parse_ident() {
+        todo!();
+    }
+
+    #[test]
+    fn test_lex() {
+        todo!();
+    }
 }

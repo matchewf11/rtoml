@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::token::Token;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Value {
     String(String),
     Bool(bool),
@@ -58,4 +58,52 @@ pub fn parse_tokens(list: &[Token]) -> Result<HashMap<String, Value>, Error> {
     }
 
     Ok(map)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_tokens_basic() {
+        let tokens = vec![
+            Token::Ident("age".to_string()),
+            Token::Equal,
+            Token::Int(30),
+            Token::NewLine,
+            Token::Ident("name".to_string()),
+            Token::Equal,
+            Token::String("Alice".to_string()),
+            Token::NewLine,
+            Token::Ident("pi".to_string()),
+            Token::Equal,
+            Token::Float(3.14),
+            Token::NewLine,
+            Token::Ident("active".to_string()),
+            Token::Equal,
+            Token::True,
+            Token::NewLine,
+        ];
+        let result = parse_tokens(&tokens).unwrap();
+        let mut expected = HashMap::new();
+        expected.insert("age".to_string(), Value::Int(30));
+        expected.insert("name".to_string(), Value::String("Alice".to_string()));
+        expected.insert("pi".to_string(), Value::Float(3.14));
+        expected.insert("active".to_string(), Value::Bool(true));
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_tokens_error_missing_equal() {
+        let tokens = vec![Token::Ident("age".to_string()), Token::Int(30)];
+        let result = parse_tokens(&tokens);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_tokens_error_unexpected_token() {
+        let tokens = vec![Token::NewLine, Token::Int(42)];
+        let result = parse_tokens(&tokens);
+        assert!(result.is_err());
+    }
 }

@@ -33,45 +33,14 @@ mod tests {
         "#;
 
         let map = parse(test).expect("unable to parse in lib.rs tests");
-
         assert_eq!(map.len(), 8);
-
-        match map.get("me") {
-            Some(Value::String(s)) => assert_eq!(s, "hello"),
-            _ => panic!("Key 'me' was not correct"),
-        }
-
-        match map.get("too") {
-            Some(Value::Int(1)) => (),
-            _ => panic!("Key 'too' was not correct"),
-        }
-
-        match map.get("neg_two") {
-            Some(Value::Int(-2)) => (),
-            _ => panic!("Key 'neg_two' was not correct"),
-        }
-
-        match map.get("_gaa") {
-            Some(Value::Bool(true)) => (),
-            _ => panic!("Key '_gaa' was not correct"),
-        }
-
-        match map.get("shee") {
-            Some(Value::Bool(false)) => (),
-            _ => panic!("Key 'shee' was not correct"),
-        }
-
-        match map.get("float_test0") {
-            Some(Value::Float(11.0)) => (),
-            _ => panic!("Key 'float_test0' was not correct"),
-        }
-        match map.get("float_test1") {
-            Some(Value::Float(1.1)) => (),
-            _ => panic!("Key 'float_test1' was not correct"),
-        }
-        match map.get("float_test2") {
-            Some(Value::Float(0.11)) => (),
-            _ => panic!("Key 'float_test2' was not correct"),
-        }
+        assert_eq!(map.get("me"), Some(&Value::String("hello".to_string())));
+        assert_eq!(map.get("too"), Some(&Value::Int(1)));
+        assert_eq!(map.get("neg_two"), Some(&Value::Int(-2)));
+        assert_eq!(map.get("_gaa"), Some(&Value::Bool(true)));
+        assert_eq!(map.get("shee"), Some(&Value::Bool(false)));
+        assert_eq!(map.get("float_test0"), Some(&Value::Float(11.0)));
+        assert_eq!(map.get("float_test1"), Some(&Value::Float(1.1)));
+        assert_eq!(map.get("float_test2"), Some(&Value::Float(0.11)));
     }
 }

@@ -1,13 +1,21 @@
-fn main() {
-    println!("Hello, World!");
+use rtoml::{Value, parse};
 
-    // let test = "me = \"hello\"\n#foo\ntoo = 1\n#foooooo\ngaa = true\nshee = false";
-    // match rtoml::parse(test) {
-    //     Ok(vec) => {
-    //         println!("{vec:?}");
-    //         let rs = rtoml::token_list_to_map(&vec).unwrap();
-    //         println!("{rs:?}");
-    //     }
-    //     Err(_) => println!("Error :("),
-    // }
+fn main() {
+    let test = r#"
+        me = "hello"
+        #foo
+        too = 1
+        #foooooo
+        gaa = true
+        shee = false
+        "#;
+
+    let map = parse(test).expect("should pass");
+
+    match map.get("too").expect("should pass") {
+        &Value::Int(x) => assert!(x == 1),
+        _ => panic!("failed"),
+    }
+
+    println!("{map:?}");
 }

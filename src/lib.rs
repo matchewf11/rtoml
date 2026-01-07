@@ -1,4 +1,3 @@
-
 use std::{collections::HashMap, iter::Peekable};
 
 #[derive(Debug)]
@@ -104,6 +103,9 @@ pub enum ParseErr {
     UnableToParseIdent,
 }
 
+// make a top level function
+// that only return hashmap given
+// a string
 pub fn parse(input: &str) -> Result<Vec<Token>, ParseErr> {
     let mut tokens: Vec<Token> = Vec::new();
     let mut input_itr = input.chars().peekable();
@@ -208,4 +210,3 @@ pub fn token_list_to_map(list: &[Token]) -> Result<HashMap<String, TomlValues>, 
 
     Ok(map)
 }
-

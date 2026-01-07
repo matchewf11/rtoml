@@ -44,7 +44,7 @@ fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<i32, IntP
         _ => false,
     };
 
-    let handle_neg = |n| n * (if negative { -1 } else {1});
+    let handle_neg = |n| n * (if negative { -1 } else { 1 });
 
     while let Some(&c) = itr.peek() {
         if c == '\n' || c == ' ' {
@@ -121,12 +121,21 @@ pub fn lex(input: &str) -> Result<Vec<Token>, Error> {
                 tokens.push(Token::Equal);
                 input_itr.next();
             }
+            '.' => {
+                // TODO: guranteed to be a float
+                todo!();
+            }
             '"' => tokens.push(Token::String(
                 parse_string(&mut input_itr).map_err(|_| Error::UnableToParseString)?,
             )),
-            c if c.is_ascii_digit() || c == '-' => tokens.push(Token::Int(
-                parse_int(&mut input_itr).map_err(|_| Error::UnableToParseInt)?,
-            )),
+            c if c.is_ascii_digit() || c == '-' => {
+                // TODO: check for floats (we know . is not the first char)
+                // float should only have one '.' with optional number on both sides (check for - in front)
+                // if no numbers then it would fail
+                tokens.push(Token::Int(
+                    parse_int(&mut input_itr).map_err(|_| Error::UnableToParseInt)?,
+                ))
+            }
             c if crate::token::is_identifier(c) => {
                 let rs = parse_ident(&mut input_itr).map_err(|_| Error::UnableToParseIdent)?;
                 if rs == "true" {

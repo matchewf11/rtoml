@@ -7,6 +7,7 @@ pub enum Value {
     String(String),
     Bool(bool),
     Int(i32),
+    Float(f32),
 }
 
 #[derive(Debug)]
@@ -31,6 +32,9 @@ pub fn parse_tokens(list: &[Token]) -> Result<HashMap<String, Value>, Error> {
                 match list_iter.next() {
                     Some(Token::Int(n)) => {
                         map.insert(id_string.clone(), Value::Int(*n));
+                    }
+                    Some(Token::Float(n)) => {
+                        map.insert(id_string.clone(), Value::Float(*n));
                     }
                     Some(Token::String(s)) => {
                         map.insert(id_string.clone(), Value::String(s.clone()));

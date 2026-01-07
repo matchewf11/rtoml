@@ -9,6 +9,9 @@ fn main() {
         #foooooo
         gaa = true
         shee = false
+        float_test0 = 11.
+        float_test1 = 1.1
+        float_test2 = .11
         "#;
 
     let map = parse(test).expect("should pass");

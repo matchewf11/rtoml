@@ -10,11 +10,9 @@ fn skip_to_newline(itr: &mut Peekable<impl Iterator<Item = char>>) {
     }
 }
 
+#[derive(Debug)]
 struct StringParseErr {}
 
-// NoMoreChars,
-// NoStartQuotation,
-// NoEndQuotation,
 fn parse_string(itr: &mut impl Iterator<Item = char>) -> Result<String, StringParseErr> {
     let first = itr.next().ok_or(StringParseErr {})?;
     if first != '"' {
@@ -32,7 +30,9 @@ fn parse_string(itr: &mut impl Iterator<Item = char>) -> Result<String, StringPa
     Err(StringParseErr {})
 }
 
+#[derive(Debug)]
 struct IntParseErr {}
+
 fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<i32, IntParseErr> {
     let mut result: i32 = 0;
     let negative = match itr.peek() {
@@ -44,6 +44,11 @@ fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<i32, IntP
     };
 
     let handle_neg = |n| n * (if negative { -1 } else { 1 });
+
+    // make sure not empty / just negative sign
+    if itr.peek().is_none() {
+        return Err(IntParseErr {});
+    }
 
     while let Some(&c) = itr.peek() {
         if c == '\n' || c == ' ' {
@@ -65,7 +70,9 @@ fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<i32, IntP
     Ok(handle_neg(result))
 }
 
+#[derive(Debug)]
 struct IdentParseErr {}
+
 fn parse_ident(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<String, IdentParseErr> {
     let mut result = String::new();
 
@@ -88,6 +95,7 @@ fn parse_ident(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<String,
     Ok(result)
 }
 
+#[derive(Debug)]
 pub enum Error {
     UnknownChar,
     UnableToParseString,
@@ -160,17 +168,77 @@ mod tests {
 
     #[test]
     fn test_skip_to_newline() {
-        todo!();
+        let cases = vec![
+            ("hello world\nnext line", Some('\n'), "newline in middle"),
+            ("", None, "empty string"),
+            ("no newline here", None, "no newline"),
+            ("\nstarts with newline", Some('\n'), "starts with newline"),
+        ];
+
+        for (input, expected, desc) in cases {
+            let mut iter: Peekable<_> = input.chars().peekable();
+            skip_to_newline(&mut iter);
+            let peeked = iter.peek().copied();
+            assert_eq!(peeked, expected, "Failed case: {}", desc);
+        }
     }
 
     #[test]
     fn test_parse_string() {
-        todo!();
+        let cases = vec![
+            ("\"hello\"", Ok("hello".to_string()), "simple string"),
+            (
+                "\"hello world!\"",
+                Ok("hello world!".to_string()),
+                "string with spaces",
+            ),
+            ("\"\"", Ok("".to_string()), "empty string"),
+            (
+                "\"unclosed",
+                Err(StringParseErr {}),
+                "missing closing quote",
+            ),
+            ("noquote", Err(StringParseErr {}), "missing opening quote"),
+            ("", Err(StringParseErr {}), "empty iterator"),
+        ];
+
+        for (input, expected, desc) in cases {
+            let mut iter = input.chars();
+            let result = parse_string(&mut iter);
+
+            match expected {
+                Ok(ref s) => assert_eq!(result.unwrap(), *s, "Failed case: {}", desc),
+                Err(_) => assert!(result.is_err(), "Failed case: {}", desc),
+            }
+        }
     }
 
     #[test]
     fn test_parse_int() {
-        todo!();
+        let cases = vec![
+            ("123", Ok(123), "simple positive"),
+            ("0", Ok(0), "zero"),
+            ("-42", Ok(-42), "negative number"),
+            ("9999 ", Ok(9999), "number followed by space"),
+            ("-7\n", Ok(-7), "negative number followed by newline"),
+            (
+                "42abc",
+                Err(IntParseErr {}),
+                "invalid characters after number",
+            ),
+            ("-", Err(IntParseErr {}), "negative sign only"),
+            ("", Err(IntParseErr {}), "empty string"),
+        ];
+
+        for (input, expected, desc) in cases {
+            let mut iter: Peekable<_> = input.chars().peekable();
+            let result = parse_int(&mut iter);
+
+            match expected {
+                Ok(n) => assert_eq!(result.unwrap(), n, "Failed case: {}", desc),
+                Err(_) => assert!(result.is_err(), "Failed case: {}", desc),
+            }
+        }
     }
 
     #[test]

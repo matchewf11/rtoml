@@ -6,3 +6,11 @@ t_oo = 1
 gaa = true
 shee = false
 ```
+
+Add tests in:
+
+- lexer.rs
+- parser.rs
+
+- add comments
+- add docs in comments

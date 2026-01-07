@@ -5,6 +5,7 @@ fn main() {
         me = "hello"
         # foo
         too = 1 # foo
+        neg_two = -2 # foo
         #foooooo
         gaa = true
         shee = false

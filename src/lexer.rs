@@ -34,12 +34,21 @@ fn parse_string(itr: &mut impl Iterator<Item = char>) -> Result<String, StringPa
 }
 
 struct IntParseErr {}
-fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<u32, IntParseErr> {
-    let mut result: u32 = 0;
+fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<i32, IntParseErr> {
+    let mut result: i32 = 0;
+    let negative = match itr.peek() {
+        Some(&'-') => {
+            itr.next(); // consume the negative sign
+            true
+        }
+        _ => false,
+    };
+
+    let handle_neg = |n| n * (if negative { -1 } else {1});
 
     while let Some(&c) = itr.peek() {
         if c == '\n' || c == ' ' {
-            return Ok(result);
+            return Ok(handle_neg(result));
         }
 
         let c = itr
@@ -50,11 +59,11 @@ fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<u32, IntP
             return Err(IntParseErr {});
         }
 
-        result *= 10;
-        result += c.to_digit(10).expect("Returned if not digit");
+        let digit = c.to_digit(10).expect("Returned if not digit") as i32;
+        result = result * 10 + digit;
     }
 
-    Ok(result)
+    Ok(handle_neg(result))
 }
 
 struct IdentParseErr {}
@@ -115,7 +124,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, Error> {
             '"' => tokens.push(Token::String(
                 parse_string(&mut input_itr).map_err(|_| Error::UnableToParseString)?,
             )),
-            c if c.is_ascii_digit() => tokens.push(Token::Int(
+            c if c.is_ascii_digit() || c == '-' => tokens.push(Token::Int(
                 parse_int(&mut input_itr).map_err(|_| Error::UnableToParseInt)?,
             )),
             c if crate::token::is_identifier(c) => {

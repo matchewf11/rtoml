@@ -6,7 +6,7 @@ use crate::token::Token;
 pub enum Value {
     String(String),
     Bool(bool),
-    Int(u32),
+    Int(i32),
 }
 
 #[derive(Debug)]

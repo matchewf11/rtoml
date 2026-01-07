@@ -1,7 +1,7 @@
 #[derive(Debug)]
 pub enum Token {
     String(String),
-    Int(u32),
+    Int(i32),
     Equal,
     Ident(String),
     NewLine,

@@ -1,8 +1,6 @@
 use crate::token::Token;
 use std::iter::Peekable;
 
-/// Consumes iterator comment until it hits a newline.
-/// Does not consume newline.
 fn skip_to_newline(itr: &mut Peekable<impl Iterator<Item = char>>) {
     loop {
         if itr.peek().is_none() || itr.peek().unwrap() == &'\n' {
@@ -83,7 +81,7 @@ fn parse_ident(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<String,
 }
 
 pub enum Error {
-    UnknownChar(char),
+    UnknownChar,
     UnableToParseString,
     UnableToParseInt,
     UnableToParseIdent,
@@ -130,8 +128,8 @@ pub fn lex(input: &str) -> Result<Vec<Token>, Error> {
                     tokens.push(Token::Ident(rs));
                 }
             }
-            c => {
-                return Err(Error::UnknownChar(c));
+            _ => {
+                return Err(Error::UnknownChar);
             }
         }
     }

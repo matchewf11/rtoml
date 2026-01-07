@@ -3,8 +3,8 @@ use rtoml::{Value, parse};
 fn main() {
     let test = r#"
         me = "hello"
-        #foo
-        too = 1
+        # foo
+        too = 1 # foo
         #foooooo
         gaa = true
         shee = false

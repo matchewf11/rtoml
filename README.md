@@ -1,15 +1,8 @@
-Allow for _ in var names
-
+```toml
+_me = "hello"
+#foo
+t_oo = 1
+#foooooo
+gaa = true
+shee = false
 ```
-foo = 1
-
-
-bar = "hello"
-jif = 1
-```
-
-map.get(K)
-
-map.get("foo") == 1
-map.get("foo") == 1
-

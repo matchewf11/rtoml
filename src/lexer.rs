@@ -1,6 +1,18 @@
 use crate::token::Token;
 use std::iter::Peekable;
 
+enum ParseNumValue {
+    Integer(i64),
+    Float(f64),
+}
+struct NumParseErr {}
+
+// test this
+fn parse_num(itr: &mut impl Iterator<Item = char>) -> Result<ParseNumValue, NumParseErr> {
+    todo!();
+}
+
+
 fn skip_to_newline(itr: &mut Peekable<impl Iterator<Item = char>>) {
     loop {
         if itr.peek().is_none() || itr.peek().unwrap() == &'\n' {
@@ -28,46 +40,6 @@ fn parse_string(itr: &mut impl Iterator<Item = char>) -> Result<String, StringPa
     }
 
     Err(StringParseErr {})
-}
-
-#[derive(Debug)]
-struct IntParseErr {}
-
-fn parse_int(itr: &mut Peekable<impl Iterator<Item = char>>) -> Result<i32, IntParseErr> {
-    let mut result: i32 = 0;
-    let negative = match itr.peek() {
-        Some(&'-') => {
-            itr.next(); // consume the negative sign
-            true
-        }
-        _ => false,
-    };
-
-    let handle_neg = |n| n * (if negative { -1 } else { 1 });
-
-    // make sure not empty / just negative sign
-    if itr.peek().is_none() {
-        return Err(IntParseErr {});
-    }
-
-    while let Some(&c) = itr.peek() {
-        if c == '\n' || c == ' ' {
-            return Ok(handle_neg(result));
-        }
-
-        let c = itr
-            .next()
-            .expect("Safe to unwrap, becuase we checked the peek value");
-
-        if !c.is_ascii_digit() {
-            return Err(IntParseErr {});
-        }
-
-        let digit = c.to_digit(10).expect("Returned if not digit") as i32;
-        result = result * 10 + digit;
-    }
-
-    Ok(handle_neg(result))
 }
 
 #[derive(Debug)]
@@ -128,20 +100,16 @@ pub fn lex(input: &str) -> Result<Vec<Token>, Error> {
                 tokens.push(Token::Equal);
                 input_itr.next();
             }
-            '.' => {
-                // TODO: guranteed to be a float
-                todo!();
-            }
             '"' => tokens.push(Token::String(
                 parse_string(&mut input_itr).map_err(|_| Error::UnableToParseString)?,
             )),
-            c if c.is_ascii_digit() || c == '-' => {
-                // TODO: check for floats (we know . is not the first char)
+            c if c.is_ascii_digit() || c == '-' || c == '.' => {
+                // TODO: check for floats (we know . could be the first char)
                 // float should only have one '.' with optional number on both sides (check for - in front)
                 // if no numbers then it would fail
-                tokens.push(Token::Int(
-                    parse_int(&mut input_itr).map_err(|_| Error::UnableToParseInt)?,
-                ))
+                // tokens.push(Token::Int(
+                //     parse_int(&mut input_itr).map_err(|_| Error::UnableToParseInt)?,
+                // ))
             }
             c if crate::token::is_identifier(c) => {
                 let rs = parse_ident(&mut input_itr).map_err(|_| Error::UnableToParseIdent)?;
@@ -213,41 +181,88 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_parse_int() {
-        let cases = vec![
-            ("123", Ok(123), "simple positive"),
-            ("0", Ok(0), "zero"),
-            ("-42", Ok(-42), "negative number"),
-            ("9999 ", Ok(9999), "number followed by space"),
-            ("-7\n", Ok(-7), "negative number followed by newline"),
-            (
-                "42abc",
-                Err(IntParseErr {}),
-                "invalid characters after number",
-            ),
-            ("-", Err(IntParseErr {}), "negative sign only"),
-            ("", Err(IntParseErr {}), "empty string"),
-        ];
-
-        for (input, expected, desc) in cases {
-            let mut iter: Peekable<_> = input.chars().peekable();
-            let result = parse_int(&mut iter);
-
-            match expected {
-                Ok(n) => assert_eq!(result.unwrap(), n, "Failed case: {}", desc),
-                Err(_) => assert!(result.is_err(), "Failed case: {}", desc),
-            }
-        }
+    fn make_iter(s: &str) -> Peekable<std::str::Chars<'_>> {
+        s.chars().peekable()
     }
 
     #[test]
     fn test_parse_ident() {
-        todo!();
+        let mut itr = make_iter("hello");
+        let ident = parse_ident(&mut itr).unwrap();
+        assert_eq!(ident, "hello");
+
+        let mut itr = make_iter("hello world");
+        let ident = parse_ident(&mut itr).unwrap();
+        assert_eq!(ident, "hello");
+        assert_eq!(itr.next(), Some(' '));
+
+        let mut itr = make_iter("hello\nworld");
+        let ident = parse_ident(&mut itr).unwrap();
+        assert_eq!(ident, "hello");
+        assert_eq!(itr.next(), Some('\n'));
+
+        let mut itr = make_iter("_foo_bar");
+        let ident = parse_ident(&mut itr).unwrap();
+        assert_eq!(ident, "_foo_bar");
+
+        let mut itr = make_iter("hello!");
+        assert!(parse_ident(&mut itr).is_err());
+
+        let mut itr = make_iter("");
+        let ident = parse_ident(&mut itr).unwrap();
+        assert_eq!(ident, "");
+
+        let mut itr = make_iter(" foo");
+        let ident = parse_ident(&mut itr).unwrap();
+        assert_eq!(ident, "");
+        assert_eq!(itr.next(), Some(' '));
     }
 
     #[test]
     fn test_lex() {
-        todo!();
+        let input = r#"
+        # Comment line
+        key = "value"
+        number = 42
+        negative = -7
+        flag_true = true
+        flag_false = false
+        "#;
+
+        let tokens = lex(input).expect("Lexing should succeed");
+
+        let expected = vec![
+            Token::NewLine,
+            Token::NewLine,
+            Token::Ident("key".to_string()),
+            Token::Equal,
+            Token::String("value".to_string()),
+            Token::NewLine,
+            Token::Ident("number".to_string()),
+            Token::Equal,
+            Token::Int(42),
+            Token::NewLine,
+            Token::Ident("negative".to_string()),
+            Token::Equal,
+            Token::Int(-7),
+            Token::NewLine,
+            Token::Ident("flag_true".to_string()),
+            Token::Equal,
+            Token::True,
+            Token::NewLine,
+            Token::Ident("flag_false".to_string()),
+            Token::Equal,
+            Token::False,
+            Token::NewLine,
+        ];
+
+        assert_eq!(tokens, expected);
+
+        let err_input = "key @ value";
+        let err = lex(err_input).unwrap_err();
+        assert!(matches!(err, Error::UnknownChar));
+
+        let empty_tokens = lex("").expect("Lexing empty string should succeed");
+        assert!(empty_tokens.is_empty());
     }
 }
